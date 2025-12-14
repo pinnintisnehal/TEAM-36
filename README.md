@@ -10,7 +10,7 @@ This project is implemented as a Streamlit web application and uses a modular, a
 ## Problem Statement
 
 Drug labels contain critical information such as dosage, warnings, and usage instructions, but they are difficult to interpret and remember.  
-However labels are difficult to read, users may misinterpret instructions, missing reminders can lead to unsafe usage.
+However labels are difficult to read, users may misinterpret instructions, and in many cases labels are available only as images, making the information even harder to access. Missing reminders can lead to unsafe usage.
 
 This project aims to:
 - Answer questions over drug labels accurately
@@ -23,7 +23,8 @@ This project aims to:
 
 ## Solution Overview
 
-- The chatbot uses Retrieval Augmented Generation (RAG) with functional AI agents:
+- The chatbot uses Retrieval Augmented Generation (RAG) with functional AI agents and OCR-based drug identification:
+- Drug names can be automatically identified from uploaded label images using OCR
 - Drug labels are ingested and embedded
 - Relevant sections are retrieved per query
 - A local LLM answers only from retrieved context
@@ -34,6 +35,9 @@ This project aims to:
 
 <img width="1408" height="768" alt="Gemini_Generated_Image_nneu4mnneu4mnneu" src="https://github.com/user-attachments/assets/6a3cc204-53ec-4d8f-98c3-d5b7fe062c21" />
 
+The system also supports image-based input, where users can upload a drug label image. Text is extracted using OCR, the drug name is identified and matched against the vector database, and the existing RAG pipeline is applied.
+
+
 ---
 
 ## RAG Pipeline
@@ -43,9 +47,12 @@ This project aims to:
 3. Long sections are chunked
 4. Chunks are embedded using nomic-embed-text
 5. Embeddings are stored in ChromaDB
-6. User selects a medication
-7. Retriever fetches relevant chunks
-8. LLM generates grounded answers or reminders
+6. User selects a medication or uploads a drug label image
+7. OCR extracts text from the image and identifies the drug name
+8. The identified drug is matched against the vector database
+9. Retriever fetches relevant chunks
+10. LLM generates grounded answers or reminders
+
 ---
 
 ## Project Structure (Streamlit)
@@ -56,6 +63,7 @@ medication_bot/
 ├── agents.py            # Ingestion, QA, Reminder agents
 ├── vectorstore.py       # ChromaDB setup and helpers
 ├── guardrails.py        # Input validation and safety checks
+├── ocr_utils.py         # OCR-based drug name identification
 ├── evals.py             # Basic evaluation utilities
 ├── ingest.py            # Manual ingestion script
 ├── sample.txt           # Drug label data (openFDA-style JSON)
@@ -75,6 +83,8 @@ medication_bot/
 - LLM: llama3:8b
 - Embeddings: nomic-embed-text
 - Streamlit
+- EasyOCR (for image-based drug label text extraction)
+
 
 ---
 
@@ -133,6 +143,12 @@ File: evals.py
 - Questions must be non-empty
 - LLM is strictly constrained to label context
 - No medical advice beyond label content
+  
+## OCR Support
+
+- Users can upload images of drug labels
+- Extracted text is displayed for transparency
+- Identified drugs are auto-selected to avoid repeated user input
 
 ---
 ## Disclaimer
