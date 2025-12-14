@@ -4,56 +4,65 @@ A **Label-Aware Medication Reminder Chatbot** built as a **Proof of Concept (POC
 
 The chatbot answers user questions strictly from official drug label data and generates structured medication reminder schedules, avoiding hallucinations by restricting queries to known drugs.
 
+This project is implemented as a Streamlit web application and uses a modular, agent-based architecture
 ---
 
 ## Problem Statement
 
 Drug labels contain critical information such as dosage, warnings, and usage instructions, but they are difficult to interpret and remember.  
-Misinterpretation or missed doses can lead to safety risks.
+However labels are difficult to read, users may misinterpret instructions, missing reminders can lead to unsafe usage.
 
 This project aims to:
 - Answer questions over drug labels accurately
 - Prevent hallucinated answers
 - Generate medication reminder plans
 - Work without phone/SMS integration
+- Works completely offline
 
 ---
 
-## Key Features
+## Solution Overview
 
-- Label-aware Q&A over drug labels
-- Drug-restricted queries (only drugs present in database)
-- Retrieval Augmented Generation (RAG)
-- Section-wise label ingestion
-- Medication reminder generation in JSON format
-- Jupyter Notebook based POC
-
+- The chatbot uses Retrieval Augmented Generation (RAG) with functional AI agents:
+- Drug labels are ingested and embedded
+- Relevant sections are retrieved per query
+- A local LLM answers only from retrieved context
+- Reminder schedules are generated in JSON
 ---
 
 ## Architecture Overview
 
-User ->Jupyter Notebook Interface ->Retriever (ChromaDB)->Relevant Drug Label Sections->LLM (Ollama)->Answer / Reminder JSON
-
+<img width="1408" height="768" alt="Gemini_Generated_Image_nneu4mnneu4mnneu" src="https://github.com/user-attachments/assets/6a3cc204-53ec-4d8f-98c3-d5b7fe062c21" />
 
 ---
 
 ## RAG Pipeline
 
-1. Drug label data is loaded from openFDA-style JSON
-2. Labels are split into sections (dosage, warnings, usage, etc.)
-3. Long sections are chunked to fit embedding limits
-4. Chunks are embedded and stored in ChromaDB with metadata
-5. Queries retrieve only relevant sections for the selected drug
-6. LLM generates answers strictly from retrieved context
-
+1. Drug label data is loaded from sample.txt
+2. Labels are split into meaningful sections
+3. Long sections are chunked
+4. Chunks are embedded using nomic-embed-text
+5. Embeddings are stored in ChromaDB
+6. User selects a medication
+7. Retriever fetches relevant chunks
+8. LLM generates grounded answers or reminders
 ---
 
-## Project Structure (POC)
-├── sample.txt # Drug label data (openFDA style)<br>
-├── chroma_poc/ # Persisted ChromaDB<br>
-├── poc.ipynb # Main Jupyter Notebook<br>
-└── README.md<br>
-
+## Project Structure (Streamlit)
+```bash
+medication_bot/
+│
+├── app.py               # Streamlit UI and interaction logic
+├── agents.py            # Ingestion, QA, Reminder agents
+├── vectorstore.py       # ChromaDB setup and helpers
+├── guardrails.py        # Input validation and safety checks
+├── evals.py             # Basic evaluation utilities
+├── ingest.py            # Manual ingestion script
+├── sample.txt           # Drug label data (openFDA-style JSON)
+├── chroma_poc/          # Persisted vector database
+├── requirements.txt     # Dependencies
+└── README.md
+```
 
 ---
 
@@ -65,7 +74,7 @@ User ->Jupyter Notebook Interface ->Retriever (ChromaDB)->Relevant Drug Label Se
 - Ollama
 - LLM: llama3:8b
 - Embeddings: nomic-embed-text
-- Jupyter Notebook
+- Streamlit
 
 ---
 
@@ -79,5 +88,55 @@ pip install langchain langchain-community chromadb
 ```bash
 ollama pull llama3:8b
 ollama pull nomic-embed-text
+```
+3. Run the app
+```bash
+streamlit run app.py
+```
+
+---
+
+## Agents used in this Project
+This project uses simple task-based agents, where each agent is responsible for one specific function in the system.
+These agents work together in a fixed and safe flow and do not act autonomously.
+
+Agents in the System
+
+- Ingestion Agent
+Loads drug label data, splits it into meaningful sections, and stores it in the vector database for search.
+
+- Retrieval Agent
+Retrieves the most relevant drug label information based on the selected medication and user query.
+
+- Question Answering Agent
+Uses the retrieved drug label content to answer user questions accurately.
+
+- Reminder Agent
+Generates a structured medication reminder schedule based on dosage instructions from the label.
+
+- Guardrail Agent
+Validates user inputs such as medication selection and questions to ensure safe and correct usage.
+
+Each agent performs a single, clearly defined task, making the system easy to understand, reliable, and safe for healthcare-related use.
+
+## Evaluation
+
+File: evals.py
+
+- Checks if retrieval returns documents
+- Verifies reminder output structure
+- Ensures JSON validity where applicable
+  
+## 🔐 Safety & Guardrails
+
+- Only drugs present in the vector DB can be queried
+- Questions must be non-empty
+- LLM is strictly constrained to label context
+- No medical advice beyond label content
+
+---
+## Disclaimer
+**This project is for educational and demonstration purposes only.
+It does not replace professional medical advice.**
 ```
 
