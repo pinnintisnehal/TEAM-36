@@ -4,8 +4,7 @@ from agents import ask_drug, reminder_agent
 from vectorstore import get_vectorstore, get_available_products
 from guardrails import validate_product, validate_question
 from agents import autonomous_ingestion
-
-# Run autonomous pipeline
+#pipeline
 vectorstore = autonomous_ingestion()
 
 # -----------------------
@@ -24,7 +23,7 @@ vectorstore = get_vectorstore()
 products = get_available_products(vectorstore)
 
 if not products:
-    st.error("❌ No medications found in database. Please ingest data first.")
+    st.error("No medications found in database. Please ingest data first.")
     st.stop()
 
 # -----------------------
@@ -189,3 +188,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
